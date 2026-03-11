@@ -101,6 +101,45 @@ function migrate(db: DatabaseSync): void {
       ) WHERE run_number IS NULL
     `);
   }
+
+  // Memory system tables (MEM-001)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS memory_contracts (
+      id TEXT PRIMARY KEY,
+      run_id TEXT NOT NULL REFERENCES runs(id),
+      contract_type TEXT NOT NULL CHECK(contract_type IN ('constraint', 'decision', 'context', 'checkpoint')),
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      priority INTEGER DEFAULT 5,
+      created_at TEXT NOT NULL,
+      accessed_at TEXT,
+      access_count INTEGER DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_memory_contracts_run ON memory_contracts(run_id);
+    CREATE INDEX IF NOT EXISTS idx_memory_contracts_key ON memory_contracts(key);
+    CREATE INDEX IF NOT EXISTS idx_memory_contracts_type ON memory_contracts(contract_type);
+    
+    CREATE TABLE IF NOT EXISTS memory_checkpoints (
+      id TEXT PRIMARY KEY,
+      run_id TEXT NOT NULL REFERENCES runs(id),
+      step_id TEXT NOT NULL,
+      checkpoint_data TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_checkpoints_run ON memory_checkpoints(run_id);
+    
+    CREATE TABLE IF NOT EXISTS session_index (
+      id TEXT PRIMARY KEY,
+      run_id TEXT NOT NULL REFERENCES runs(id),
+      operation TEXT NOT NULL,
+      key TEXT,
+      success INTEGER DEFAULT 1,
+      details TEXT,
+      timestamp TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_session_run ON session_index(run_id);
+    CREATE INDEX IF NOT EXISTS idx_session_operation ON session_index(operation);
+  `);
 }
 
 export function nextRunNumber(): number {
