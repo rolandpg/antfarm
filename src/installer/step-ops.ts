@@ -1,4 +1,5 @@
 import { getDb } from "../db.js";
+import { MemoryContract } from "../lib/memory.js";
 import type { LoopConfig, Story } from "./types.js";
 import fs from "node:fs";
 import path from "node:path";
@@ -531,6 +532,41 @@ export function claimStep(agentId: string): ClaimResult {
     context["has_frontend_changes"] = "false";
   }
 
+  // MEMORY INTEGRATION (MEM-008): Load working set and checkpoint
+  const workingSet = MemoryContract.getWorkingSet(step.run_id, 20);
+  const checkpoint = MemoryContract.getLatestCheckpoint(step.run_id);
+  
+  // Inject memory context into template
+  if (workingSet.length > 0) {
+    const constraints = workingSet
+      .filter(c => c.contract_type === 'constraint')
+      .map(c => `- ${c.key}: ${JSON.stringify(c.value)}`)
+      .join('\n');
+    const decisions = workingSet
+      .filter(c => c.contract_type === 'decision')
+      .map(c => `- ${c.key}: ${JSON.stringify(c.value)}`)
+      .join('\n');
+    
+    context["memory_constraints"] = constraints || "(none)";
+    context["memory_decisions"] = decisions || "(none)";
+    context["memory_working_set"] = workingSet.map(c => c.key).join(', ');
+  } else {
+    context["memory_constraints"] = "(none)";
+    context["memory_decisions"] = "(none)";
+    context["memory_working_set"] = "(empty)";
+  }
+  
+  if (checkpoint) {
+    context["checkpoint_step"] = checkpoint.step_id;
+    context["checkpoint_data"] = JSON.stringify(checkpoint.checkpoint_data);
+  } else {
+    context["checkpoint_step"] = "(none)";
+    context["checkpoint_data"] = "{}";
+  }
+  
+  // Required memory acknowledgment
+  context["required_memory_search"] = "TRUE";
+
   // T6: Loop step claim logic
   if (step.type === "loop") {
     const loopConfig: LoopConfig | null = step.loop_config ? JSON.parse(step.loop_config) : null;
@@ -704,6 +740,23 @@ export function completeStep(stepId: string, output: string): { advanced: boolea
   db.prepare(
     "UPDATE runs SET context = ?, updated_at = datetime('now') WHERE id = ?"
   ).run(JSON.stringify(context), step.run_id);
+
+  // MEMORY INTEGRATION (MEM-008): Create checkpoint with key state
+  const checkpointData = {
+    step_id: step.step_id,
+    context_keys: Object.keys(context),
+    stories_completed: db.prepare("SELECT COUNT(*) as cnt FROM stories WHERE run_id = ? AND status = 'done'").get(step.run_id) as { cnt: number },
+    timestamp: new Date().toISOString()
+  };
+  MemoryContract.createCheckpoint(step.run_id, step.step_id, checkpointData);
+  
+  // Persist key decisions/constraints from output
+  if (parsed["key_decision"]) {
+    MemoryContract.setContract(step.run_id, 'decision', `decision_${step.step_id}`, parsed["key_decision"], 8);
+  }
+  if (parsed["key_constraint"]) {
+    MemoryContract.setContract(step.run_id, 'constraint', `constraint_${step.step_id}`, parsed["key_constraint"], 10);
+  }
 
   // T5: Parse STORIES_JSON from output (any step, typically the planner)
   parseAndInsertStories(output, step.run_id);
