@@ -9,8 +9,9 @@ description: |
   PR agent creates the pull request.
 
 polling:
-  model: default
+  model: ollama/devstral-small-2
   timeoutSeconds: 120
+  ollamaBaseUrl: http://192.168.1.70:11434
 
 agents:
   - id: triager

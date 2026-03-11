@@ -10,8 +10,9 @@ description: |
   Then integration/E2E testing, PR creation, and code review.
 
 polling:
-  model: default
+  model: ollama/devstral-small-2
   timeoutSeconds: 120
+  ollamaBaseUrl: http://192.168.1.70:11434
 
 agents:
   - id: planner
