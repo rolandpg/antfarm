@@ -99,12 +99,18 @@ steps:
       TASK:
       {{task}}
 
+      REQUIRED_MEMORY_SEARCH:
+      Working Set: {{memory_working_set}}
+      Constraints: {{memory_constraints}}
+      Decisions: {{memory_decisions}}
+
       Instructions:
-      1. Explore the codebase — understand the stack, framework, dependencies
-      2. Run `npm audit` (or equivalent) if a package manager is present
-      3. Scan for hardcoded secrets: API keys, passwords, tokens, private keys in source
-      4. Check for .env files committed to the repo
-      5. Scan for common vulnerabilities:
+      1. Review memory constraints and decisions above
+      2. Explore the codebase — understand the stack, framework, dependencies
+      3. Run `npm audit` (or equivalent) if a package manager is present
+      4. Scan for hardcoded secrets: API keys, passwords, tokens, private keys in source
+      5. Check for .env files committed to the repo
+      6. Scan for common vulnerabilities:
          - SQL injection (raw queries, string concatenation in queries)
          - XSS (unescaped user input in templates/responses)
          - CSRF (missing CSRF tokens on state-changing endpoints)
@@ -115,12 +121,13 @@ steps:
          - Missing input validation on API endpoints
          - Insecure file permissions
          - Exposed environment variables
-      6. Review auth/session handling (token expiry, session fixation, cookie flags)
-      7. Check security headers (CORS, CSP, HSTS, X-Frame-Options)
-      8. Document every finding with severity, file, line, and description
+      7. Review auth/session handling (token expiry, session fixation, cookie flags)
+      8. Check security headers (CORS, CSP, HSTS, X-Frame-Options)
+      9. Document every finding with severity, file, line, and description
 
       Reply with:
       STATUS: done
+      MEMORY_ACKNOWLEDGED: (confirm you reviewed constraints/decisions)
       REPO: /path/to/repo
       BRANCH: security-audit-YYYY-MM-DD
       VULNERABILITY_COUNT: <number>
@@ -142,13 +149,19 @@ steps:
       VULNERABILITY_COUNT: {{vulnerability_count}}
       FINDINGS: {{findings}}
 
+      REQUIRED_MEMORY_SEARCH:
+      Working Set: {{memory_working_set}}
+      Constraints: {{memory_constraints}}
+      Decisions: {{memory_decisions}}
+
       Instructions:
-      1. Deduplicate findings (same root cause = one fix)
-      2. Group related issues (e.g., multiple XSS from same missing sanitizer = one fix)
-      3. Rank by: exploitability × impact (critical > high > medium > low)
-      4. Create a prioritized fix plan — max 20 fixes
-      5. If more than 20 issues, pick the top 20 by severity; note deferred items
-      6. Output each fix as a story in STORIES_JSON format
+      1. Review memory constraints and decisions above
+      2. Deduplicate findings (same root cause = one fix)
+      3. Group related issues (e.g., multiple XSS from same missing sanitizer = one fix)
+      4. Rank by: exploitability × impact (critical > high > medium > low)
+      5. Create a prioritized fix plan — max 20 fixes
+      6. If more than 20 issues, pick the top 20 by severity; note deferred items
+      7. Output each fix as a story in STORIES_JSON format
 
       Each story object must have:
       - id: "fix-001", "fix-002", etc.
@@ -159,6 +172,7 @@ steps:
 
       Reply with:
       STATUS: done
+      MEMORY_ACKNOWLEDGED: (confirm you reviewed constraints/decisions)
       FIX_PLAN: <ordered list of fixes with severity>
       CRITICAL_COUNT: <number>
       HIGH_COUNT: <number>
@@ -177,15 +191,22 @@ steps:
       REPO: {{repo}}
       BRANCH: {{branch}}
 
+      REQUIRED_MEMORY_SEARCH:
+      Working Set: {{memory_working_set}}
+      Constraints: {{memory_constraints}}
+      Decisions: {{memory_decisions}}
+
       Instructions:
-      1. cd into the repo
-      2. Create the security branch (git checkout -b {{branch}} from main)
-      3. Read package.json, CI config, test config to understand build/test setup
-      4. Run the build to establish a baseline
-      5. Run the tests to establish a baseline
+      1. Review memory constraints and decisions above
+      2. cd into the repo
+      3. Create the security branch (git checkout -b {{branch}} from main)
+      4. Read package.json, CI config, test config to understand build/test setup
+      5. Run the build to establish a baseline
+      6. Run the tests to establish a baseline
 
       Reply with:
       STATUS: done
+      MEMORY_ACKNOWLEDGED: (confirm you reviewed constraints/decisions)
       BUILD_CMD: <build command>
       TEST_CMD: <test command>
       BASELINE: <baseline status>
@@ -228,20 +249,32 @@ steps:
       PROGRESS LOG:
       {{progress}}
 
+      REQUIRED_MEMORY_SEARCH:
+      Working Set: {{memory_working_set}}
+      Constraints: {{memory_constraints}}
+      Decisions: {{memory_decisions}}
+      Checkpoint: {{checkpoint_step}}
+
+      You MUST review and acknowledge key constraints before implementing fixes.
+
       Instructions:
-      1. cd into the repo, pull latest on the branch
-      2. Read the vulnerability description carefully
-      3. Implement the fix — minimal, targeted changes only
-      4. Write a regression test that verifies the vulnerability is patched
-      5. Run {{build_cmd}} to verify the build passes
-      6. Run {{test_cmd}} to verify all tests pass
-      7. Commit: fix(security): brief description
-      8. Rewrite progress-{{run_id}}.txt with updated story results and patterns
+      1. Review memory constraints and decisions above
+      2. cd into the repo, pull latest on the branch
+      3. Read the vulnerability description carefully
+      4. Implement the fix — minimal, targeted changes only
+      5. Write a regression test that verifies the vulnerability is patched
+      6. Run {{build_cmd}} to verify the build passes
+      7. Run {{test_cmd}} to verify all tests pass
+      8. Commit: fix(security): brief description
+      9. Rewrite progress-{{run_id}}.txt with updated story results and patterns
 
       Reply with:
       STATUS: done
+      MEMORY_ACKNOWLEDGED: (confirm you reviewed constraints/decisions)
       CHANGES: what was fixed
       REGRESSION_TEST: what test was added
+      key_decision: (if you made any critical security decisions)
+      key_constraint: (if you identified constraints future fixes must respect)
     expects: "STATUS: done"
     max_retries: 2
     on_fail:
