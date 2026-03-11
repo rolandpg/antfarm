@@ -1,4 +1,5 @@
 import { MemoryContract } from "../lib/memory.js";
+import { QMD } from "../lib/qmd.js";
 import { getDb } from "../db.js";
 
 /**
@@ -15,6 +16,8 @@ export function memoryCommand(args: string[]): number {
       return getContract(runId, args[2]);
     case "search":
       return searchMemory(runId, args[2]);
+    case "query":
+      return queryQMD(runId, args[2]);
     case "log":
       return showLog(runId);
     case "checkpoint":
@@ -27,6 +30,7 @@ Commands:
   list <run-id>              List all contracts for a run
   get <run-id> <key>         Get specific contract by key
   search <run-id> <keyword>  Search contracts by keyword
+  query <run-id> <query>     QMD semantic search with ranking
   log <run-id>               Show session operation log
   checkpoint <run-id>        Show latest checkpoint
   clear <run-id>             Clear all memory for a run
@@ -134,5 +138,26 @@ function clearRun(runId: string | undefined): number {
   console.log(`Clearing all memory for run ${runId}...`);
   MemoryContract.clearRun(runId);
   console.log("Done.");
+  return 0;
+}
+
+function queryQMD(runId: string | undefined, query: string | undefined): number {
+  if (!runId || !query) {
+    console.error("Error: run-id and query required");
+    return 1;
+  }
+  const results = QMD.query(runId, query, { limit: 10, minScore: 0.2 });
+  console.log(`\nQMD query results for "${query}" in run ${runId}:`);
+  console.log("-".repeat(80));
+  console.log(`${"Score".padEnd(8)} ${"Strategy".padEnd(15)} ${"Type".padEnd(12)} ${"Key"}`);
+  console.log("-".repeat(80));
+  for (const r of results) {
+    const score = (r.score * 100).toFixed(0) + "%";
+    console.log(`${score.padEnd(8)} ${r.strategy.padEnd(15)} ${r.contract.contract_type.padEnd(12)} ${r.contract.key}`);
+  }
+  if (results.length === 0) {
+    console.log("(no results above threshold)");
+  }
+  console.log(`\nTotal: ${results.length} results`);
   return 0;
 }
