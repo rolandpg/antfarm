@@ -89,6 +89,13 @@ function printUsage() {
       "antfarm install                      Install all bundled workflows",
       "antfarm uninstall [--force]          Full uninstall (workflows, agents, crons, DB)",
       "",
+      "antfarm memory list <run-id>         List memory contracts for a run",
+      "antfarm memory get <run-id> <key>    Get specific memory contract",
+      "antfarm memory search <run-id> <q>   Search contracts by keyword",
+      "antfarm memory log <run-id>          Show session operation log",
+      "antfarm memory checkpoint <run-id>   Show latest checkpoint",
+      "antfarm memory clear <run-id>        Clear all memory for a run",
+      "",
       "antfarm workflow list                List available workflows",
       "antfarm workflow install <name>      Install a workflow",
       "antfarm workflow uninstall <name>    Uninstall a workflow (blocked if runs active)",
@@ -447,6 +454,12 @@ async function main() {
     const events = getRecentEvents(limit);
     printEvents(events);
     return;
+  }
+
+  if (group === "memory") {
+    const { memoryCommand } = await import("./memory-commands.js");
+    const exitCode = memoryCommand(args.slice(1));
+    process.exit(exitCode);
   }
 
   if (args.length < 2) { printUsage(); process.exit(1); }
