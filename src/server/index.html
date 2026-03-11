@@ -215,12 +215,54 @@ select:focus{outline:none;border-color:#8ECFC0}
     <span class="medic-dot unknown" id="medic-dot"></span>
     <span id="medic-label">Medic</span>
   </div>
+  <button class="medic-badge" id="projects-btn" onclick="toggleProjectsPanel()" title="Project Plans">
+    <span>🎮</span>
+    <span>Projects</span>
+  </button>
   <span class="refresh-note" id="refresh-note">Auto-refresh: 30s</span>
 </header>
 <div class="board" id="board"><div class="empty" style="margin:auto">Select a workflow</div></div>
 <div class="medic-panel" id="medic-panel">
   <div class="medic-panel-header">Workflow Medic</div>
   <div class="medic-panel-body" id="medic-panel-body">Loading...</div>
+</div>
+<div class="medic-panel" id="projects-panel" style="right:370px;width:480px;max-height:600px">
+  <div class="medic-panel-header">🎮 Trooper Clash - Azure Backend Plan</div>
+  <div class="medic-panel-body" id="projects-panel-body" style="font-size:12px;line-height:1.6">
+    <div style="margin-bottom:16px">
+      <div style="font-weight:600;color:var(--accent-green);margin-bottom:8px">Infrastructure Stack</div>
+      <div style="display:grid;gap:8px">
+        <div class="medic-stat"><span>Azure PlayFab</span><span class="medic-stat-value">Auth, Economy, Matchmaking</span></div>
+        <div class="medic-stat"><span>Container Apps</span><span class="medic-stat-value">Dedicated game servers</span></div>
+        <div class="medic-stat"><span>Static Web Apps</span><span class="medic-stat-value">WebGL demo hosting</span></div>
+        <div class="medic-stat"><span>SignalR Service</span><span class="medic-stat-value">Real-time features</span></div>
+        <div class="medic-stat"><span>Cosmos DB</span><span class="medic-stat-value">Match history, replays</span></div>
+        <div class="medic-stat"><span>Blob + CDN</span><span class="medic-stat-value">Asset delivery</span></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-weight:600;color:var(--accent-teal);margin-bottom:8px">Cost Estimates</div>
+      <div style="display:grid;gap:8px">
+        <div class="medic-stat"><span>Launch (50K MAU)</span><span class="medic-stat-value">~$44/month</span></div>
+        <div class="medic-stat"><span>Growth (100K MAU)</span><span class="medic-stat-value">~$467/month</span></div>
+        <div class="medic-stat"><span>Scale (500K MAU)</span><span class="medic-stat-value">~$1,658/month</span></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-weight:600;color:var(--accent-orange);margin-bottom:8px">Key Benefits</div>
+      <ul style="margin:0;padding-left:16px;color:var(--text-secondary)">
+        <li>Unity-native backend (PlayFab)</li>
+        <li>Scale-to-zero game servers</li>
+        <li>Global CDN for WebGL demo</li>
+        <li>Server-authoritative (anti-cheat)</li>
+        <li>GDPR/COPPA compliant</li>
+      </ul>
+    </div>
+    <div style="font-size:11px;color:var(--text-secondary);border-top:1px solid var(--border-light);padding-top:12px">
+      <strong>Status:</strong> Architecture defined, ready for implementation<br>
+      <strong>Next:</strong> PlayFab SDK integration → Container Apps deployment
+    </div>
+  </div>
 </div>
 <div class="overlay" id="overlay" onclick="if(event.target===this)closePanel()">
   <div class="panel" id="panel"></div>
@@ -507,6 +549,24 @@ document.addEventListener('click', e => {
   const badge = document.getElementById('medic-badge');
   if (!panel.contains(e.target) && !badge.contains(e.target)) {
     medicPanelOpen = false;
+    panel.classList.remove('open');
+  }
+});
+
+// ── Projects Panel ──────────────────────────────────────────────
+let projectsPanelOpen = false;
+
+function toggleProjectsPanel() {
+  projectsPanelOpen = !projectsPanelOpen;
+  document.getElementById('projects-panel').classList.toggle('open', projectsPanelOpen);
+}
+
+document.addEventListener('click', e => {
+  if (!projectsPanelOpen) return;
+  const panel = document.getElementById('projects-panel');
+  const btn = document.getElementById('projects-btn');
+  if (!panel.contains(e.target) && !btn.contains(e.target)) {
+    projectsPanelOpen = false;
     panel.classList.remove('open');
   }
 });
