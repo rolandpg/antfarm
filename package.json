@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "json5": "^2.2.3",
-    "yaml": "^2.4.5"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node": "^25.2.1",
